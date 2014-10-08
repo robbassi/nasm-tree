@@ -22,16 +22,11 @@ _start:
 	pop r8            ; argc
 	cmp r8, 2         ; argc > 2
 	jne usage         ; show usage and exit
-	
-	; dev - print args
-	;mov rdi, r8
-	;mov rsi, rsp
-	;call print_strs
 
-	mov rax, 2
-	mov rdi, [rsp+8]
-	mov rsi, 0
-	mov rdx, 0
+	mov rax, 2        ; open the directory
+	mov rdi, [rsp+8]  ; dir path
+	mov rsi, 0        ; flags
+	mov rdx, 0        ; read only
 	syscall
 
 	mov rdi, rax      ; result fd
@@ -40,7 +35,7 @@ _start:
 	mov rdx, buff_size
 	syscall
 
-	mov rdi, contents
+	mov rdi, contents  
 	call display_contents
 
 	jmp exit
