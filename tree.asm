@@ -14,7 +14,7 @@ max_entries: equ 1000
 buff_size: equ entry_size * max_entries
 
 section .bss
-contents: resb entry_size * max_entries
+contents: resb buff_size
 
 section .text
 
