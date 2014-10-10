@@ -1,6 +1,4 @@
 #define DT_DIR		4
-void puts(char*, int);
-void* malloc(unsigned long len);
 
 struct linux_dirent {
   unsigned long  d_ino;     /* Inode number */
@@ -10,14 +8,15 @@ struct linux_dirent {
   /* char           d_type; */
 };
 
-int pos, level = 0;
-char buff[1000];
+void puts(char*, int);
+int open(char*);
+int dirents(char*, struct linux_dirent*buf, int len);
+void* malloc(unsigned long);
 
-/* void dir2tree(char *path) { */
-/*   int fd = fopen(path); */
-/*   struct linux_dirent *entries = load_contents(fd); */
-/*   display_contents(entries); */
-/* } */
+int base_pos = 0;
+int level = 0;
+char buff[2000];
+char base_path[2000];
 
 int len (char *s) {
   int l = 0;
@@ -25,18 +24,59 @@ int len (char *s) {
   return l;
 }
 
-char* concat(char*a, char*b, char*buf) {
+char* concat(char*a, char*b) {
   int lena = len(a);
   int lenb = len(b);
   int i, j;
   for (i = 0; i < lena; i++) {
-    buf[i] = a[i];
+    buff[i] = a[i];
   } 
   for (j = 0; j < lenb; j++, i++) {
-    buf[i] = b[j];
+    buff[i] = b[j];
   }
-  buf[i] = '\0';
-  return buf;
+  buff[i] = '\0';
+  return buff;
+}
+
+int strcmp (char*a, char*b) {
+  int lena = len(a);
+  int lenb = len(b);
+
+  if (lena != lenb)
+    return 0;
+
+  int i;
+  for (i = 0; i < lena; i++)
+    if (a[i] != b[i])
+      return 0;
+
+  return 1;
+}
+
+int strcpy (char*s, char*d) {
+  int l = len(s);
+  int i;
+  for (i = 0; i < l; i++) {
+    d[i] = s[i];
+  }
+  d[i] = '\0';
+  return i;
+}
+
+char* push (char*path) {
+  concat(buff, path);
+  return concat(buff, "/");
+}
+
+void pop () {
+  int l = len(buff);
+  if (buff[l-1] == '/')
+    l-=2;
+  for (;l > 0; l--)
+    if (buff[l] == '/') {
+      buff[l+1] = '\0';
+      return;
+    }
 }
 
 int is_directory(struct linux_dirent *entry) {
@@ -48,21 +88,41 @@ void println(char *str) {
   puts("\n", 1);
 }
 
-void print_strs(int l, char**strs) {
+void indent() {
+  if (!level) return;
   int i;
-  for (i = 0; i < l; i++)
-    println(strs[i]);
+  puts(" ", 1);
+  puts("|", 1);
+  for (i = 0; i < level; i++)
+    puts("--", 2);
 }
 
-void display_contents(struct linux_dirent entries[]) {
+void display_contents(int l, struct linux_dirent entries[]) {
   while (entries->d_ino > 0) {
-    char *buf = (char*) malloc(100);
-    if (is_directory(entries)) {
-      level++;
-      puts("(directory) ", 11);
-      level--;
+    if (!strcmp(entries->d_name, ".") && !strcmp(entries->d_name, "..")) {
+      
+      indent();
+      println(entries->d_name);
+
+      if (is_directory(entries)) {
+	level++;
+	tree(entries->d_name);
+	level--;
+      }
     }
-    println(concat(entries->d_name, " ahhhhh!", buf));
-    entries = (struct linux_dirent *) (((char *) entries) + entries->d_reclen);
+    entries = (struct linux_dirent *) (((char *) entries) + entries->d_reclen);  
   }
+}
+
+void tree (char*path) {
+  push(path);
+  int fd = open(buff);
+  struct linux_dirent*buf = (struct linux_dirent*)malloc(50000);
+  int l = dirents(fd, buf, 50000);
+  display_contents(l, buf);
+  pop();
+}
+
+void init () {
+  base_path[0] = '\0';
 }

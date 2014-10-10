@@ -1,11 +1,15 @@
 ;; Given a directory name, display its contents as a tree
 
+extern init
+extern tree
 extern print_strs
 extern display_contents
 
 global _start
 global puts
 global malloc
+global open
+global dirents
 
 section .data
 argc_error: db `Usage: tree <dir>\n`, 18
@@ -24,8 +28,10 @@ _start:
 	cmp r8, 2         ; argc > 2
 	jne usage         ; show usage and exit
 
+	call init
+
 	mov rdi, [rsp+8]
-	call print_contents
+	call tree
 
 	jmp exit
 
@@ -33,17 +39,13 @@ _start:
 print_contents:
 	push rax          ; save registers
 	push rdi
-	
-	mov rax, 2        ; open the directory
-	mov rsi, 0        ; flags
-	mov rdx, 0        ; read only
-	syscall
 
-	mov rdi, rax      ; result fd
-	mov rax, 78
+	call open
+
+	mov rdi, rax
 	mov rsi, contents
 	mov rdx, buff_size
-	syscall
+	call dirents
 
 	mov rdi, contents  
 	call display_contents
@@ -51,6 +53,23 @@ print_contents:
 	pop rdi           ; restore registers
 	pop rax
 
+	ret
+
+; rdi -> char*path
+open:
+	mov rax, 2        ; open the directory
+	mov rsi, 0        ; flags
+	mov rdx, 0        ; read only
+	syscall
+	ret
+	
+; rdi -> fd
+; rsi -> struct linux_dirent*buff
+; rdx -> buff length
+dirents:
+	mov rdi, rax      ; result fd
+	mov rax, 78
+	syscall
 	ret
 
 ; rdi -> char*buff
@@ -72,6 +91,7 @@ puts:
 
 ; rdi -> length
 malloc:
+	
 	push rdi     ; save the length
 
 	xor rbx, rbx ; determine end of the bss segment
@@ -80,12 +100,16 @@ malloc:
 	syscall
 
 	pop rdi      ; restore the length
+	push rdi
 
 	add rax, rdi ; now add the length to the end of the bss segment
 	mov rbx, rax ; update rbx
 	mov rdi, rax ; push new offset in rdi
 	mov rax, 12  ; brk
 	syscall
+
+	pop rdi      
+	sub rax, rdi ; rewind the index by the allocation amount
 
 	ret
 
