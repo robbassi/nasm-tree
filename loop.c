@@ -1,4 +1,5 @@
 #define DT_DIR		4
+#define BUFF_SIZE       50000
 
 struct linux_dirent {
   unsigned long  d_ino;     /* Inode number */
@@ -102,7 +103,7 @@ void indent() {
     puts("--", 2);
 }
 
-void display_contents(int l, struct linux_dirent entries[]) {
+void display_contents(struct linux_dirent entries[]) {
   while (entries->d_ino > 0) {
     if (!strcmp(entries->d_name, ".") && !strcmp(entries->d_name, "..")) {
       
@@ -123,9 +124,9 @@ void tree (char*path) {
   push(path);
 
   int fd = open(base_path);
-  struct linux_dirent*buf = (struct linux_dirent*)malloc(50000);
-  int l = dirents(fd, buf, 50000);
-  display_contents(l, buf);
+  struct linux_dirent*buf = (struct linux_dirent*) malloc(BUFF_SIZE);
+  dirents(fd, buf, BUFF_SIZE);
+  display_contents(buf);
 
   pop();
 }
