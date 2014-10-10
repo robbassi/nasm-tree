@@ -5,6 +5,7 @@ extern display_contents
 
 global _start
 global puts
+global malloc
 
 section .data
 argc_error: db `Usage: tree <dir>\n`, 18
@@ -23,8 +24,17 @@ _start:
 	cmp r8, 2         ; argc > 2
 	jne usage         ; show usage and exit
 
+	mov rdi, [rsp+8]
+	call print_contents
+
+	jmp exit
+
+; rdi -> dir path
+print_contents:
+	push rax          ; save registers
+	push rdi
+	
 	mov rax, 2        ; open the directory
-	mov rdi, [rsp+8]  ; dir path
 	mov rsi, 0        ; flags
 	mov rdx, 0        ; read only
 	syscall
@@ -38,14 +48,13 @@ _start:
 	mov rdi, contents  
 	call display_contents
 
-	jmp exit
+	pop rdi           ; restore registers
+	pop rax
 
-usage:
-	mov rdi, argc_error
-	mov rsi, argc_error_len
-	call puts
-	call exit
+	ret
 
+; rdi -> char*buff
+; rsi -> length
 puts:
 	push rax          ; save registers
 	push rdi          
@@ -60,6 +69,31 @@ puts:
 	pop rax
 
 	ret
+
+; rdi -> length
+malloc:
+	push rdi     ; save the length
+
+	xor rbx, rbx ; determine end of the bss segment
+	mov rdi, rbx ; push the addr in rdi (arg 0)
+	mov rax, 12  ; brk
+	syscall
+
+	pop rdi      ; restore the length
+
+	add rax, rdi ; now add the length to the end of the bss segment
+	mov rbx, rax ; update rbx
+	mov rdi, rax ; push new offset in rdi
+	mov rax, 12  ; brk
+	syscall
+
+	ret
+
+usage:
+	mov rdi, argc_error
+	mov rsi, argc_error_len
+	call puts
+	call exit
 
 exit:
 	mov rax, 60
