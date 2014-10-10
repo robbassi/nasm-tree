@@ -1,10 +1,10 @@
 rebuild : clean all
 
-all : tree.o loop.o
-	ld tree.o loop.o -o tree
+all : base.o tree.o
+	ld base.o tree.o -o tree
+base.o :
+	nasm -felf64 tree.asm -o base.o
 tree.o :
-	nasm -felf64 tree.asm -o tree.o
-loop.o :
-	gcc -nostdlib -c loop.c
+	gcc -nostdlib -c tree.c
 clean :
 	rm -rf *.o

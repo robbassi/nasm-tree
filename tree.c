@@ -11,8 +11,10 @@ struct linux_dirent {
 
 void puts(char*, int);
 int open(char*);
-int dirents(char*, struct linux_dirent*buf, int len);
+int dirents(char*, struct linux_dirent*, int);
 void* malloc(unsigned long);
+
+void tree (char*);
 
 int level = 0;
 char base_path[2000];
