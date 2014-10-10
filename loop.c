@@ -13,9 +13,7 @@ int open(char*);
 int dirents(char*, struct linux_dirent*buf, int len);
 void* malloc(unsigned long);
 
-int base_pos = 0;
 int level = 0;
-char buff[2000];
 char base_path[2000];
 
 int len (char *s) {
@@ -29,13 +27,13 @@ char* concat(char*a, char*b) {
   int lenb = len(b);
   int i, j;
   for (i = 0; i < lena; i++) {
-    buff[i] = a[i];
+    base_path[i] = a[i];
   } 
   for (j = 0; j < lenb; j++, i++) {
-    buff[i] = b[j];
+    base_path[i] = b[j];
   }
-  buff[i] = '\0';
-  return buff;
+  base_path[i] = '\0';
+  return base_path;
 }
 
 int strcmp (char*a, char*b) {
@@ -64,17 +62,17 @@ int strcpy (char*s, char*d) {
 }
 
 char* push (char*path) {
-  concat(buff, path);
-  return concat(buff, "/");
+  concat(base_path, path);
+  return concat(base_path, "/");
 }
 
 void pop () {
-  int l = len(buff);
-  if (buff[l-1] == '/')
+  int l = len(base_path);
+  if (base_path[l-1] == '/')
     l-=2;
   for (;l > 0; l--)
-    if (buff[l] == '/') {
-      buff[l+1] = '\0';
+    if (base_path[l] == '/') {
+      base_path[l+1] = '\0';
       return;
     }
   
@@ -124,15 +122,11 @@ void display_contents(int l, struct linux_dirent entries[]) {
 void tree (char*path) {
   push(path);
 
-  int fd = open(buff);
+  int fd = open(base_path);
   struct linux_dirent*buf = (struct linux_dirent*)malloc(50000);
   int l = dirents(fd, buf, 50000);
   display_contents(l, buf);
 
   pop();
-}
-
-void init () {
-  base_path[0] = '\0';
 }
 

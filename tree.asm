@@ -1,6 +1,5 @@
 ;; Given a directory name, display its contents as a tree
 
-extern init
 extern tree
 extern print_strs
 extern display_contents
@@ -27,8 +26,6 @@ _start:
 	pop r8            ; argc
 	cmp r8, 2         ; argc > 2
 	jne usage         ; show usage and exit
-
-	call init
 
 	mov rdi, [rsp+8]
 	call tree
