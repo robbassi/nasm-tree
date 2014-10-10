@@ -77,6 +77,7 @@ void pop () {
       buff[l+1] = '\0';
       return;
     }
+  
 }
 
 int is_directory(struct linux_dirent *entry) {
@@ -86,6 +87,12 @@ int is_directory(struct linux_dirent *entry) {
 void println(char *str) {
   puts(str, len(str));
   puts("\n", 1);
+}
+
+void print_strs(int l, char**strs) {
+  int i;
+  for (i = 0; i < l; i++)
+    println(strs[i]);
 }
 
 void indent() {
@@ -116,13 +123,16 @@ void display_contents(int l, struct linux_dirent entries[]) {
 
 void tree (char*path) {
   push(path);
+
   int fd = open(buff);
   struct linux_dirent*buf = (struct linux_dirent*)malloc(50000);
   int l = dirents(fd, buf, 50000);
   display_contents(l, buf);
+
   pop();
 }
 
 void init () {
   base_path[0] = '\0';
 }
+
