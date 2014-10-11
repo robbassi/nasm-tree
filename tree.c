@@ -11,6 +11,7 @@ struct linux_dirent {
 
 void puts(char*, int);
 int open(char*);
+int close(int);
 int dirents(char*, struct linux_dirent*, int);
 void* malloc(unsigned long);
 
@@ -128,6 +129,7 @@ void tree (char*path) {
   int fd = open(base_path);
   struct linux_dirent*buf = (struct linux_dirent*) malloc(BUFF_SIZE);
   dirents(fd, buf, BUFF_SIZE);
+  close(fd);
   display_contents(buf);
 
   pop();

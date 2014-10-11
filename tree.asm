@@ -8,6 +8,7 @@ global _start
 global puts
 global malloc
 global open
+global close
 global dirents
 
 section .data
@@ -54,9 +55,15 @@ print_contents:
 
 ; rdi -> char*path
 open:
-	mov rax, 2        ; open the directory
+	mov rax, 2        ; open 
 	mov rsi, 0        ; flags
 	mov rdx, 0        ; read only
+	syscall
+	ret
+
+; rdi -> fd
+close:
+	mov rax, 3        ; close
 	syscall
 	ret
 	
