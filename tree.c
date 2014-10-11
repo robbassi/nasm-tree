@@ -6,19 +6,24 @@ struct linux_dirent {
   unsigned long  d_off;     /* Offset to next linux_dirent  */
   unsigned short d_reclen;  /* Length of this linux_dirent */
   char           d_name[];  /* Filename (null-terminated) */  
-  /* char           d_type; */
+  /* char        d_type; */
 };
 
+// declared in tree.asm
 void puts(char*, int);
 int open(char*);
 int close(int);
 int dirents(char*, struct linux_dirent*, int);
 void* malloc(unsigned long);
 
+// 
 void tree (char*);
 
+// current indentation level
 int level = 0;
-char base_path[2000];
+
+// the current directory
+char current_path[2000];
 
 int len (char *s) {
   int l = 0;
@@ -26,18 +31,18 @@ int len (char *s) {
   return l;
 }
 
-char* concat(char*a, char*b) {
+char* concat(char*a, char*b, char*buff) {
   int lena = len(a);
   int lenb = len(b);
   int i, j;
   for (i = 0; i < lena; i++) {
-    base_path[i] = a[i];
+    buff[i] = a[i];
   } 
   for (j = 0; j < lenb; j++, i++) {
-    base_path[i] = b[j];
+    buff[i] = b[j];
   }
-  base_path[i] = '\0';
-  return base_path;
+  buff[i] = '\0';
+  return buff;
 }
 
 int strcmp (char*a, char*b) {
@@ -65,21 +70,26 @@ int strcpy (char*s, char*d) {
   return i;
 }
 
+/* push a directory on to the current path */
 char* push (char*path) {
-  concat(base_path, path);
-  return concat(base_path, "/");
+  concat(current_path, path, current_path);
+  return concat(current_path, "/", current_path);
 }
 
+/* move up one directory */
 void pop () {
-  int l = len(base_path);
-  if (base_path[l-1] == '/')
-    l-=2;
+  int l = len(current_path) - 1;
+  
+  // skip trailing slashes
+  if (current_path[l] == '/')
+    l--;
+  
+  // rewind to the last slash
   for (;l > 0; l--)
-    if (base_path[l] == '/') {
-      base_path[l+1] = '\0';
+    if (current_path[l] == '/') {
+      current_path[l+1] = '\0';
       return;
     }
-  
 }
 
 int is_directory(struct linux_dirent *entry) {
@@ -100,16 +110,15 @@ void print_strs(int l, char**strs) {
 void indent() {
   if (!level) return;
   int i;
-  puts(" ", 1);
-  puts("|", 1);
+  puts(" |", 2);
   for (i = 0; i < level; i++)
     puts("--", 2);
 }
 
 void display_contents(struct linux_dirent entries[]) {
   while (entries->d_ino > 0) {
-    if (!strcmp(entries->d_name, ".") && !strcmp(entries->d_name, "..")) {
-      
+    if (!strcmp(entries->d_name, ".") && 
+	!strcmp(entries->d_name, "..")) {
       indent();
       println(entries->d_name);
 
@@ -119,6 +128,8 @@ void display_contents(struct linux_dirent entries[]) {
 	level--;
       }
     }
+
+    // linux_dirent's are variable length
     entries = (struct linux_dirent *) (((char *) entries) + entries->d_reclen);  
   }
 }
@@ -126,7 +137,7 @@ void display_contents(struct linux_dirent entries[]) {
 void tree (char*path) {
   push(path);
 
-  int fd = open(base_path);
+  int fd = open(current_path);
   struct linux_dirent*buf = (struct linux_dirent*) malloc(BUFF_SIZE);
   dirents(fd, buf, BUFF_SIZE);
   close(fd);

@@ -1,5 +1,4 @@
 ;; Given a directory name, display its contents as a tree
-
 extern tree
 extern print_strs
 extern display_contents
