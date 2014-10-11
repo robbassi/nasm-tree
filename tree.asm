@@ -13,12 +13,6 @@ global dirents
 section .data
 argc_error: db `Usage: tree <dir>\n`, 18
 argc_error_len: equ 18
-entry_size: equ 16
-max_entries: equ 1000
-buff_size: equ entry_size * max_entries
-
-section .bss
-contents: resb buff_size
 
 section .text
 
@@ -32,25 +26,6 @@ _start:
 
 	jmp exit
 
-; rdi -> dir path
-print_contents:
-	push rax          ; save registers
-	push rdi
-
-	call open
-
-	mov rdi, rax
-	mov rsi, contents
-	mov rdx, buff_size
-	call dirents
-
-	mov rdi, contents  
-	call display_contents
-
-	pop rdi           ; restore registers
-	pop rax
-
-	ret
 
 ; rdi -> char*path
 open:
@@ -94,7 +69,6 @@ puts:
 
 ; rdi -> length
 malloc:
-	
 	push rdi     ; save the length
 
 	xor rbx, rbx ; determine end of the bss segment

@@ -35,12 +35,10 @@ char* concat(char*a, char*b, char*buff) {
   int lena = len(a);
   int lenb = len(b);
   int i, j;
-  for (i = 0; i < lena; i++) {
+  for (i = 0; i < lena; i++)
     buff[i] = a[i];
-  } 
-  for (j = 0; j < lenb; j++, i++) {
+  for (j = 0; j < lenb; j++, i++)
     buff[i] = b[j];
-  }
   buff[i] = '\0';
   return buff;
 }
@@ -134,11 +132,11 @@ void display_contents(struct linux_dirent entries[]) {
   }
 }
 
-void tree (char*path) {
+void tree (char* path) {
   push(path);
 
   int fd = open(current_path);
-  struct linux_dirent*buf = (struct linux_dirent*) malloc(BUFF_SIZE);
+  struct linux_dirent* buf = (struct linux_dirent*) malloc(BUFF_SIZE);
   dirents(fd, buf, BUFF_SIZE);
   close(fd);
   display_contents(buf);
